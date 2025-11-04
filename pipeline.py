@@ -743,6 +743,9 @@ def main():
     # Compute the similarity matrix based on the loaded embeddings
     similarity_matrix = compute_similarity_matrix_npib_global(embeddings)
 
+    # Store alpha values
+    calculated_ratios = []
+
     # Merge layers iteratively from the last layer towards the first
     for _ in range(args.num_layer):
         if num_layers <= 1:
@@ -755,6 +758,15 @@ def main():
         # Compute fusion ratios for the current pair of layers based on similarity
         fusion_ratios = compute_fusion_ratios(similarity_matrix, [(layer1_idx, layer2_idx)])
         adjusted_ratio_i, adjusted_ratio_j = fusion_ratios[0]
+
+        # Store the calculated ratio
+        calculated_ratios.append({
+            "step": args.num_layer - num_layers + 1,
+            "layer_to_merge_into": int(layer1_idx),
+            "layer_to_remove": int(layer2_idx),
+            "ratio_i_alpha": float(adjusted_ratio_i),
+            "ratio_j": float(adjusted_ratio_j)
+        })
 
         print(f"Merging Layer {layer1_idx} (Fusion Ratio: {adjusted_ratio_i:.4f}) and Layer {layer2_idx} (Fusion Ratio: {adjusted_ratio_j:.4f})")
 
@@ -790,6 +802,13 @@ def main():
     # Save the state dictionary to the specified path using PyTorch's save function
     torch.save(state_dict, save_path)
     print(f"Model successfully saved to {save_path}.")
+
+    # Save the calculated fusion alphas
+    alphas_path = os.path.join(fusion_info_dir, "fusion_alphas.json")
+    print(f"\nSaving calculated fusion ratios to: {alphas_path}")
+    with open(alphas_path, "w") as f:
+        json.dump(calculated_ratios, f, indent=2)
+    print(f"Saved {len(calculated_ratios)} fusion ratios to {alphas_path}")
 
     # Optional: Print example tensor values from the state dictionary for small tensors
     # This helps in verifying the actual data without overwhelming the output

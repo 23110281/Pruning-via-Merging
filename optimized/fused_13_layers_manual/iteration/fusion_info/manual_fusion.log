@@ -1,0 +1,19 @@
+INFO:root:Starting manual fusion process.
+INFO:root:Args: Namespace(model_path='meta-llama/Meta-Llama-3-8B', alphas_file='./optimized_alphas.json', num_layer=13, output_dir='./optimized', data_dir='./data')
+INFO:accelerate.utils.modeling:We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+INFO:root:Loaded base model from meta-llama/Meta-Llama-3-8B
+INFO:root:Step 1: Fusing 30 (alpha: 0.4668088018810296) and 31
+INFO:root:Step 2: Fusing 29 (alpha: 0.5881297973768632) and 30
+INFO:root:Step 3: Fusing 28 (alpha: 0.30004574992693794) and 29
+INFO:root:Step 4: Fusing 27 (alpha: 0.4209330290527359) and 28
+INFO:root:Step 5: Fusing 26 (alpha: 0.3587023563268452) and 27
+INFO:root:Step 6: Fusing 25 (alpha: 0.3369354379075191) and 26
+INFO:root:Step 7: Fusing 24 (alpha: 0.3745040845510683) and 25
+INFO:root:Step 8: Fusing 23 (alpha: 0.4382242908172191) and 24
+INFO:root:Step 9: Fusing 22 (alpha: 0.458706989692268) and 23
+INFO:root:Step 10: Fusing 21 (alpha: 0.5155266936013427) and 22
+INFO:root:Step 11: Fusing 20 (alpha: 0.4676778057613179) and 21
+INFO:root:Step 12: Fusing 19 (alpha: 0.5740878001587038) and 20
+INFO:root:Step 13: Fusing 18 (alpha: 0.38178089989260694) and 19
+INFO:root:Completed layer fusion. Final layer count: 19
+INFO:root:Model saved to ./optimized/fused_13_layers_manual/iteration/merged_weights/pytorch_model.bin
