@@ -81,13 +81,13 @@ To fuse a model and evaluate it using any of the available alpha files, use `alp
 
 ```bash
 # Run with baseline alphas
-python alpha_pipeline.py --alpha_file fusion_alphas.json --output_dir base
+python alpha_pipeline.py --model_path "meta-llama/Meta-Llama-3-8B" --alphas_file "./fusion_alphas.json" --num_layer 13 --output_dir "./base" --data_dir "./data"
 
 # Run with Bayesian Optimization alphas
-python alpha_pipeline.py --alpha_file optimized_alphas.json --output_dir optimized
+python alpha_pipeline.py --model_path "meta-llama/Meta-Llama-3-8B" --alphas_file "./optimized_alphas.json" --num_layer 13 --output_dir "./optimized" --data_dir "./data"
 
 # Run with Gradient Descent alphas
-python alpha_pipeline.py --alpha_file parthiv-alphas.json --output_dir parthiv
+python alpha_pipeline.py --model_path "meta-llama/Meta-Llama-3-8B" --alphas_file "./parthiv_alphas.json" --num_layer 13 --output_dir "./parthiv" --data_dir "./data"
 ```
 
 ## Alphas and MMLU Summary
