@@ -1,114 +1,91 @@
-# Pruning-via-Merging-Compressing-LLMs-via-Manifold-Alignment-Based-Layer-Merging
+
+# Model Fusion Alpha Optimization
 
 ## Overview
 
-This project provides a comprehensive pipeline for **fusing layers in pre-trained causal language models** using manifold learning techniques. Layer fusion aims to reduce the number of layers in a model by intelligently combining similar layers, potentially leading to more efficient models without significant loss in performance.
+This repository is an extension of the original [Pruning-via-Merging](https://github.com/SempraETY/Pruning-via-Merging) implementation for model fusion. The original codebase provides the core framework for fusing model layers and evaluating them.
 
-The pipeline involves:
+Our contribution is an automated optimization pipeline to **find the optimal layer fusion coefficients ($\alpha$ values)**. This allows us to move beyond manual tuning and systematically discover alpha sets that maximize performance, either for general accuracy or for specific, targeted subjects (e.g., MMLU subjects like `anatomy` or `abstract_algebra`).
 
-1. **Model Evaluation:** Assessing the model's performance on multiple-choice datasets.
-2. **Activation Extraction:** Capturing activations from each model layer for analysis.
-3. **Manifold Learning:** Applying diffusion kernels to embed high-dimensional activations into lower-dimensional spaces.
-4. **Similarity Computation:** Calculating similarities between layers based on mutual information and entropy estimates.
-5. **Layer Fusion:** Combining layers with high similarity to create a more compact model.
-6. **Saving the Fused Model:** Exporting the modified model for future use.
+## Our Additions
 
-## Installation
+We have introduced several new scripts and a methodology for comparing different alpha-generation techniques.
 
-1. **Clone the Repository:**
+  * **`optimize_alphas.py`**: Uses **Bayesian Optimization** to find the best alpha values for a given objective.
+  * **`alpha_pipeline.py`**: Runs the full fusion and MMLU evaluation pipeline using a specified alpha file.
+  * **`parthiv-alphas.json`**: Alpha values generated using a **Gradient Descent**-based approach.
+  * **`fusion_alphas.json`**: Baseline values of alphas (merged using 13 layers no alpha optimization)
+  * **`optimized_alphas.json`**: `optimize_alphas.py` results
 
-   ```bash
-   git clone https://github.com/yourusername/layer-fusion](https://github.com/SempraETY/Pruning-via-Merging-Compressing-LLMs-via-Manifold-Alignment-Based-Layer-Merging.git
-   ```
+## Optimization Methodologies
 
-2. **Create a Virtual Environment (Optional but Recommended):**
+We compare results from two different optimization methods against a manual baseline.
 
-   ```bash
-   conda create -n maniflod_compression python=3.9 -y
-   conda activate maniflod_compression
-   ```
+### 1\. Gradient Descent
 
-3. **Install Dependencies:**
+The results in the `./parthiv` directory are generated from the alphas in `parthiv-alphas.json`. This set of coefficients was determined using a gradient-descent-based optimization method.
 
-   ```bash
-   pip install torch transformers numpy pandas scikit-learn tqdm
-   ```
+### 2\. Bayesian Optimization
 
-## Data Format
+The `optimize_alphas.py` script treats the entire fusion-and-evaluation process as a "black-box" function.
 
-The pipeline expects MMLU data
+1.  **Objective Function**: We define an objective to maximize (e.g., `average_accuracy` or a specific subject like `anatomy`).
+2.  **Black Box**: The script repeatedly:
+      * Proposes a new set of alpha values.
+      * Runs the fusion and MMLU evaluation.
+      * Reads the resulting score (e.g., `anatomy` accuracy).
+3.  **Optimization**: A Bayesian Optimization algorithm observes these (alpha set, score) pairs and intelligently decides the next best alpha set to try, balancing exploration (trying new, uncertain values) and exploitation (refining known good values).
 
-## Usage
+This process allows us to create **specialized models**. By simply changing the target objective in `optimize_alphas.py` (e.g., from `anatomy` to `abstract_algebra`), we can re-run the optimization to generate a new `optimized_alphas.json` file tailored to that specific subject.
 
-Run the main script with appropriate command-line arguments to perform layer fusion.
+The logs from the optimization process itself (showing the search progression) are saved in the `/optimization_run` directory.
 
-### Command-Line Arguments:
+## Repository Structure (Our Files)
 
-- `--ntrain`, `-k`: **(int, default=5)** Number of training examples to include in prompts.
-- `--ngpu`, `-g`: **(int, default=4)** Number of GPUs to use.
-- `--model_path`: **(str, default="/data/yangzhao/point/baichuan/Meta-Llama-3-70B")** Path to the pre-trained model.
-- `--num_tasks`, `-n`: **(int, default=57)** Number of MMLU tasks to process.
-- `--num_samples`, `-m`: **(int, default=1)** Number of samples per task.
-- `--data_dir`, `-d`: **(str, default="data")** Directory containing the data.
-- `--num_layer`, `-i`: **(int, default=1)** Number of layers to fuse.
+```
+.
+├── alpha_pipeline.py       # Runs the full pipeline (fusion + eval) for a given alpha file
+├── optimize_alphas.py      # Runs Bayesian Optimization to find the best alphas
+|
+├── fusion_alphas.json      # Baseline/manual alpha values
+├── optimized_alphas.json   # Alphas generated by optimize_alphas.py
+├── parthiv-alphas.json     # Alphas generated by Parthiv (gradient descent)
+|
+├── base/                   # Results from running alpha_pipeline.py with fusion_alphas.json
+├── optimized/              # Results from running alpha_pipeline.py with optimized_alphas.json
+├── parthiv/                # Results from running alpha_pipeline.py with parthiv-alphas.json
+|
+└── optimization_run/       # Logs generated by the optimize_alphas.py script
+```
 
-### Example Command:
+  * **Original Files**: All other scripts (`calib_tools.py`, `categories.py`, `crop.py`, etc.) are part of the original implementation and are called by our pipeline scripts.
+
+## How to Run
+
+### Step 1: Run the Optimization (Optional)
+
+To generate a new set of optimized alphas, configure your objective in `optimize_alphas.py` and run it:
 
 ```bash
-python pipeline.py --ntrain 10 --ngpu 2 --model_path "/path/to/model" --num_tasks 50 --num_samples 5 --data_dir "./data" --num_layer 2
+python optimize_alphas.py
 ```
 
-## Process Workflow
+This will run the full optimization search and produce `optimized_alphas.json` and logs in `optimization_run/`.
 
-1. **Initialization:**
-   - Parses command-line arguments.
-   - Sets up directories for embeddings, fusion information, and merged weights.
-   - Configures logging and sets random seeds for reproducibility.
+> [!NOTE]
+> The following steps may overwrite the contents of the `base/`, `parthiv/`, and `optimized/` directories. Ensure you have backed up any important data before running the pipeline.
 
-2. **Model and Tokenizer Loading:**
-   - Loads the tokenizer and pre-trained causal language model from the specified `model_path`.
+### Step 2: Run the Full Pipeline
 
-3. **Data Processing:**
-   - Iterates through each subject's test data.
-   - For each selected sample, formats the prompt and extracts activations from all model layers.
+To fuse a model and evaluate it using any of the available alpha files, use `alpha_pipeline.py`.
 
-4. **Manifold Learning:**
-   - Applies a diffusion kernel to the stacked activations of each layer to obtain lower-dimensional embeddings.
+```bash
+# Run with baseline alphas
+python alpha_pipeline.py --alpha_file fusion_alphas.json --output_dir base
 
-5. **Similarity Computation:**
-   - Calculates a similarity matrix based on normalized pointwise information bottleneck (NPIB) between layers.
+# Run with Bayesian Optimization alphas
+python alpha_pipeline.py --alpha_file optimized_alphas.json --output_dir optimized
 
-6. **Layer Fusion:**
-   - Identifies pairs of layers with high similarity.
-   - Fuses specified layers by blending their weights based on computed fusion ratios.
-   - Updates the model configuration and removes fused layers.
-
-7. **Saving the Fused Model:**
-   - Saves the modified model's state dictionary and configuration to the designated directory.
-
-## Outputs
-
-- **Embeddings Directory:** Contains pickled files of embedded activations for each layer.
-- **Fusion Info Directory:** Stores logs detailing the fusion process.
-- **Merged Weights Directory:** Holds the fused model's configuration and the `pytorch_model.bin` file.
-- Note: To obtain the final weight, you also need to update the weight index configuration file. If you do not update the configuration file, the weights that do not exist in the index will be randomly initialized, causing problems
-
-**Example Structure:**
-
-```
-EMNLP2024/
-└── layer_fus/
-    └── al/
-        └── Meta-Llama-3-70B/
-            └── fused_2_layers/
-                └── iteration/
-                    ├── embeddings/
-                    │   ├── layer_0_embedded.pkl
-                    │   ├── layer_1_embedded.pkl
-                    │   └── ...
-                    ├── fusion_info/
-                    │   └── experiment.log
-                    └── merged_weights/
-                        ├── config.json
-                        └── pytorch_model.bin
+# Run with Gradient Descent alphas
+python alpha_pipeline.py --alpha_file parthiv-alphas.json --output_dir parthiv
 ```
