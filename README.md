@@ -89,3 +89,34 @@ python alpha_pipeline.py --alpha_file optimized_alphas.json --output_dir optimiz
 # Run with Gradient Descent alphas
 python alpha_pipeline.py --alpha_file parthiv-alphas.json --output_dir parthiv
 ```
+
+## Alphas and MMLU Summary
+
+### Average MMLU Accuracy
+
+| Model | Average Accuracy |
+|---|---|
+| base (fusion_alphas.json) | 0.64710 |
+| optimized (optimized_alphas.json) | 0.64705 |
+| parthiv (parthiv-alphas.json) | 0.64753 |
+| optimized_all (optimized_all_alphas.json) | 0.64888 |
+
+### Alpha values (ratio_i_alpha) per merge step
+
+Each row corresponds to a layer merge of the form into<-remove.
+
+| Step | Merge (into<-remove) | base | optimized | parthiv | optimized_all |
+|---:|:---:|---:|---:|---:|---:|
+| 0 | 30<-31 | 0.6257765467 | 0.4668088019 | 0.509012 | 0.3249944307 |
+| 1 | 29<-30 | 0.6270365984 | 0.5881297974 | 0.594924 | 0.3254301426 |
+| 2 | 28<-29 | 0.6218680744 | 0.3000457499 | 0.710577 | 0.3458614108 |
+| 3 | 27<-28 | 0.6279836130 | 0.4209330291 | 0.557285 | 0.6730300922 |
+| 4 | 26<-27 | 0.6236575608 | 0.3587023563 | 0.701547 | 0.3886671637 |
+| 5 | 25<-26 | 0.6261533059 | 0.3369354379 | 0.540713 | 0.5532461803 |
+| 6 | 24<-25 | 0.6230820117 | 0.3745040846 | 0.715259 | 0.6088977355 |
+| 7 | 23<-24 | 0.6222846654 | 0.4382242908 | 0.516398 | 0.3626643352 |
+| 8 | 22<-23 | 0.6240776121 | 0.4587069897 | 0.623941 | 0.3015083045 |
+| 9 | 21<-22 | 0.6122476283 | 0.5155266936 | 0.534059 | 0.3400057862 |
+| 10 | 20<-21 | 0.6201869909 | 0.4676778058 | 0.700754 | 0.3435758257 |
+| 11 | 19<-20 | 0.6139920247 | 0.5740878002 | 0.524230 | 0.3209859709 |
+| 12 | 18<-19 | 0.6216273821 | 0.3817808999 | 0.602134 | 0.6283643694 |
